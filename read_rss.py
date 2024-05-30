@@ -3,8 +3,12 @@ from bs4 import BeautifulSoup
 import feedparser
 
 def get_final_url(url):
-    response = requests.get(url, allow_redirects=True)
-    return response.url
+    try:
+        response = requests.get(url, allow_redirects=True)
+        return response.url
+    except requests.exceptions.SSLError:
+        print(f"SSL Error for URL: {url}. Skipping...")
+        return None
 
 def get_thumbnail_url(final_url):
     response = requests.get(final_url)
@@ -38,12 +42,15 @@ def fetch_news_thumbnails(rss_url):
         article_title = entry.title
         article_url = entry.link
         final_url = get_final_url(article_url)
+        if final_url is None:
+            continue
         thumbnail_url = get_thumbnail_url(final_url)
         if thumbnail_url:
             news.append({'article_title': article_title, 'article_url': final_url, 'thumbnail_url': thumbnail_url})
     return news
 
 rss_url = 'https://news.google.com/rss/search?q=financial%20market%20canada%20when%3A1d&hl=en-CA&gl=CA&ceid=CA%3Aen'
+
 news = fetch_news_thumbnails(rss_url)
 
 for item in news:
