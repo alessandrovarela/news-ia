@@ -1,14 +1,13 @@
-import openai
+from openai import OpenAI
 
 class OpenAIService:
-    def __init__(self, api_key):
-        self.api_key = api_key
-        openai.api_key = self.api_key
+    def __init__(self, api_key, organization, project):
+        self.client = OpenAI(api_key=api_key, organization=organization, project=project)
 
-    def generate_text(self, prompt, max_tokens=100):
-        response = openai.Completion.create(
-            engine="text-davinci-002",
-            prompt=prompt,
+    def make_request(self, messages, model, max_tokens):
+        completion = self.client.chat.completions.create(
+            model=model,
+            messages=messages,
             max_tokens=max_tokens
         )
-        return response.choices[0].text.strip()
+        return completion.choices[0].message.content

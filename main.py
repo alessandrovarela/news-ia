@@ -44,3 +44,11 @@ for news in chosen_news:
     print(news['published'])
     print(news['source_name'])
     print('---')
+
+# Cria Headline
+headline = news_service.create_headline(chosen_news, 'openai', 'gpt-4o', 4096)
+
+print("Headline:")
+print(headline)
+
+# Faz resumo de notícias e envia para WhastApp
