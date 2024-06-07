@@ -52,3 +52,8 @@ print("Headline:")
 print(headline)
 
 # Faz resumo de notícias e envia para WhastApp
+for news in chosen_news:
+    summary = news_service.summarize_news(news['url'], 'groq', 'llama3-70b-8192', 8000)
+    print("=============================================================")
+    print(f"Summary for {news['title']}: {summary}")
+    # news_service.send_whatsapp_message(news['title'], summary)

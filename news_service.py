@@ -1,3 +1,4 @@
+import re
 from typing import List
 from generic_ai_service import GenericAIService
 from supabase_service import SupabaseService
@@ -38,6 +39,15 @@ class NewsService:
         self.supabase.insert_data('news_chosen', news_chosen)
 
         return news_chosen
+    
+    def inital_introduction(self, ai, model, max_tokens=100):
+        introduction = ["Fala meus queridos Investidores Canadenses! Meu nome é Ethan, eu sou um especialista em notícias do mercado financeiro canadense",
+                  "Estou aqui para compartilhar com vocês as melhores novidades e informações sobre o mercado canadense.",
+                  "Por enquanto o Alessandro me programou apenas para enviar as melhores notícas para vocês, mas quem sabe no futuro possamos trocar algumas ideias."
+                  "Vamos juntos explorar as últimas notícias e oportunidades de investimento que estão surgindo no mercado.",
+                  "Espero ajudar vocês com seus negócios e investimentos.",
+                  "Aqui vai um apanhado das principais notícias do mercado financeiro canadense dos últimos dias:"]
+        return introduction
     
     def create_headline(self, chosen_news, ai, model, max_tokens=100):
         prompt = """Você é um especialista na criação de saudações personalizadas para os leitores de uma Newsletter especializada em notícias do mercado financeiro Canadense. Sua função é criar saudações para uma newsletter diária cujos leitores são chamados de "Investidores Canadenses".
@@ -87,3 +97,62 @@ class NewsService:
         ]
         headline = self.ai_service.generate_text(messages, ai, model, max_tokens)
         return headline
+
+    def summarize_news(self, news_url, ai, model, max_tokens=100):
+        prompt = """
+                    ## Contexto:
+                    Aja como um entusiasta do mercado financeiro Canadense em criar resumos de novidades do mercado financeiro canadense e mercado de ações de empresas canadenses.
+
+                    ## Objetivo:
+                    Seu principal objetivo é extrair e sintetizar informações relevantes sobre os impactos sobre o mercado financeiro canadense canadenses da URL fornecida, considerando seu impacto no cotidiano. Se houver relevância para destacar riscos ou oportunidades você poderá destacar, mas apenas destaque um risco ou uma oportunidade de investimento se realmente houver relevância para isso.
+
+                    ## Processo:
+                    Analise cuidadosamente a URL fornecida, buscando informações-chave sobre o impacto no dia a dia, oportunidades ou riscos que podem representar para um investidor ou para o mercado financeiro canadense como um todo.
+                    Crie um resumo em português-BR com até 500 caracteres, destacando os impactos atuais ou futuros e as mudanças que podem trazer.
+
+                    ## Estilo de Escrita do Resumo:
+                    Tom: Informativo e positivo, compartilhando novidades empolgantes de forma clara e objetiva.
+                    Estilo de Linguagem: Acessível e envolvente, adequado para um público geral interessado no mercado de ações canadense. Use linguagem simples e exemplos concretos.
+                    Encerramento: Finalize com insights ou reflexões que destaquem a relevância da notícia, convidando o leitor a pensar sobre seus impactos.
+
+                    ## Audiência:
+                    O público-alvo são pessoas interessadas no mercado financeiro e investidores de ações do mercado canadense, com diferentes níveis de conhecimento.
+
+                    ## Formato de Saída:
+                    O resumo deve ser otimizado para o WhatsApp: conciso, informativo e interessante. Siga este formato:
+
+                    Título descritivo e chamativo entre asteriscos.
+                    Formato: {título} \n {resumo} \n {url}.
+                    Priorize informações relevantes e impactos concretos.
+
+                    ## Exemplos de Saída:
+                    Use os exemplos abaixo, em <exemplo>, como referência de estilo e formato, adaptando-os ao conteúdo específico da notícia.
+
+                    <exemplo> 
+                    *Inflação no Canadá desacelera em fevereiro* 
+
+                    A taxa de inflação do Canadá desacelerou inesperadamente para 2,8% em fevereiro, a mais baixa desde junho. Este declínio, impulsionado por menores preços de alimentos e serviços de internet, aumentou as expectativas de um corte na taxa de juros em junho. Investidores estão otimistas com a possibilidade de redução dos juros, o que pode estimular a economia. No entanto, a queda na inflação também enfraqueceu o dólar canadense. Aguardam-se novas projeções do Banco do Canadá em abril. Será que finalmente chegou a hora da recuperação da economia canadense?
+
+                    Fonte: https://ca.news.yahoo.com/canadas-inflation-rate-unexpectedly-eases-123448807.html 
+                    </exemplo> 
+
+                    <exemplo> 
+                    *Alta de Ações de Energia e Metais Impulsiona S&P/TSX* 
+
+                    O índice S&P/TSX Composite do Canadá subiu na quinta-feira, com um ganho de 100 pontos, impulsionado pela força nos setores de energia e metais básicos. Este aumento refletiu uma recuperação após dois dias de perdas, destacando a resiliência do mercado canadense, mesmo com os mercados americanos mistos. Investidores estão otimistas com as projeções de cortes de juros no próximo ano, trazendo novas oportunidades no mercado de ações.
+
+                    Fonte: https://www.bradfordtoday.ca/national-business/energy-and-base-metals-help-lift-sptsx-composite-thursday-us-stock-markets-mixed-9006693
+                    </exemplo>
+                 """
+        messages = [
+            {
+                "role": "system",
+                "content": prompt
+            },
+            {
+                "role": "user",
+                "content": news_url
+            }
+        ]
+        summary = self.ai_service.generate_text(messages, ai, model, max_tokens)
+        return summary
