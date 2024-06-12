@@ -6,8 +6,8 @@ class GenericAIService:
     def __init__(self):
         with open('config.json') as f:
             config = json.load(f)
-        self.openai_service = OpenAIService(config['OPENAI_API_KEY'], config['OPENAI_ORGANIZATION'], config['OPENAI_PROJECT'])
-        self.groq_service = GroqService(config['GROQ_BASE_URL'], config['GROQ_API_KEY'])
+        self.openai_service = OpenAIService(config['ai']['openai']['api_key'], config['ai']['openai']['organization'], config['ai']['openai']['project'])
+        self.groq_service = GroqService(config['ai']['groq']['base_url'], config['ai']['groq']['api_key'])
 
     def generate_text(self, messages, ai, model, max_tokens=100):
         if ai == 'openai':

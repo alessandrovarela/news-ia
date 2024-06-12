@@ -1,4 +1,3 @@
-import re
 from typing import List
 from generic_ai_service import GenericAIService
 from supabase_service import SupabaseService
