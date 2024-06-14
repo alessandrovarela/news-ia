@@ -1,4 +1,6 @@
 import requests
+from requests.exceptions import RequestException, SSLError
+
 from bs4 import BeautifulSoup
 import feedparser
 
@@ -6,8 +8,11 @@ def get_final_url(url):
     try:
         response = requests.get(url, allow_redirects=True)
         return response.url
-    except requests.exceptions.SSLError:
+    except SSLError:
         print(f"SSL Error for URL: {url}. Skipping...")
+        return None
+    except RequestException:
+        print(f"Connection error for URL: {url}. Skipping...")
         return None
 
 def get_thumbnail_url(final_url):

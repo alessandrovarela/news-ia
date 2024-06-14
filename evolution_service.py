@@ -4,9 +4,13 @@ import random
 class EvolutionApiService:
     def __init__(self, config):
         self._config = config
+        print('----------------- CONFIG --------------')
+        print(config)        
 
     def send_text_message(self, instance, number, text, options=None):
-        url = f"https://{self._config['server_url']}/message/sendText/{instance}"
+        url = f"{self._config.get('server_url')}/message/sendText/{self._config.get('instance_name')}"
+        print( '----------------- URL --------------')
+        print(url)
 
         # Calculate the delay if delay_enabled is True
         delay = self.calculate_delay(text, self._config['average_char_min']) if self._config.get('delay_enabled', False) else 0
@@ -20,8 +24,11 @@ class EvolutionApiService:
             "options": {"delay": delay} if options is None else options,
             "textMessage": {"text": text}
         }
+
+        print( '----------------- PAYLOAD ------------')
+        print(payload)
         response = requests.post(url, json=payload, headers=headers)
-        return response.json()
+        return (response.json(), response.status_code)
 
     def calculate_delay(self, message, average_char_min):
         # Calculate the number of characters per second
@@ -35,6 +42,9 @@ class EvolutionApiService:
         delay_seconds *= random_factor
 
         # Convert the delay to milliseconds
-        delay_milliseconds = delay_seconds * 1000
+        delay_milliseconds = int(delay_seconds * 1000)
 
         return delay_milliseconds
+    
+    def get_config(self):
+        return self._config

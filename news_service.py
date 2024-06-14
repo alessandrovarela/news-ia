@@ -1,15 +1,23 @@
 from typing import List
-from generic_ai_service import GenericAIService
-from supabase_service import SupabaseService
 
 class NewsService:
-    def __init__(self, supabase_url: str, supabase_key: str):
-        self.ai_service = GenericAIService()
-        self.supabase = SupabaseService(supabase_url, supabase_key)
+    def __init__(self, *, ai_service, supabase_service, whatsapp_service):
+        self.ai_service = ai_service
+        self.supabase_service = supabase_service
+        self.whatsapp_service = whatsapp_service
+
+
+    def get_news_sources(self, project_id):
+        query = f"project_id=eq.{project_id}&active=eq.true&select=*"
+        return self.supabase_service.select_data("news_source", query)
+    
+    def delete_news_by_project(self, project_id):
+        query = f"project_id=eq.{project_id}"
+        return self.supabase_service.delete_data("news", query)
 
     def choose_news(self, all_news: List[dict], ai: str, model: str, max_tokens: int = 100) -> List[dict]:
         
-        recent_news = self.supabase.select_data('news_chosen', 'order=id.desc&limit=50')
+        recent_news = self.supabase_service.select_data('news_chosen', 'order=id.desc&limit=50')
         recent_news_url = ', '.join([news['url'] for news in recent_news])
         print("Recent news URLs: --------------------------")
         print(recent_news_url)
@@ -35,7 +43,7 @@ class NewsService:
         chosen_urls = self.ai_service.generate_text(messages, ai, model, max_tokens)
 
         news_chosen = [news for news in all_news if news['url'] in chosen_urls]
-        self.supabase.insert_data('news_chosen', news_chosen)
+        self.supabase_service.insert_data('news_chosen', news_chosen)
 
         return news_chosen
     
@@ -155,3 +163,19 @@ class NewsService:
         ]
         summary = self.ai_service.generate_text(messages, ai, model, max_tokens)
         return summary
+
+    def get_subscribers(self, project_id: str):
+        query = f"project_id=eq.{project_id}&active=eq.true"
+        return self.supabase_service.select_data("news_subscribers", query)
+
+    def send_headline_news(self, number: str, headline: str):
+        response, status_code = self.whatsapp_service.send_text_message_whasts_app(number, headline)
+        if status_code == 201:
+            # Verifica se há um erro no dicionário de resposta
+            if response.get('error'):
+                # Lidar com o erro
+                print("Erro ao enviar a mensagem:", response.get('error'))
+            else:
+                print("Mensagem enviada com sucesso.")
+        else:
+            print(f"Erro na requisição: Código de status {status_code}")

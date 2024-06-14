@@ -1,44 +1,39 @@
+from hmac import new
 from read_rss import fetch_news_thumbnails
 from supabase_service import SupabaseService
 from news_service import NewsService
 from whatsapp_service import WhatsAppService
 from evolution_service import EvolutionApiService # noqa: F401
+from generic_ai_service import GenericAIService
 import json
+
+PROJECT_ID = 1
 
 # Load the configuration file
 with open("config.json") as config_file:
     config = json.load(config_file)
 
 
-# Create the Supabase service using the values from the configuration file
-supabase_service = SupabaseService(config["database"]["supabase"]["url"], config["database"]["supabase"]["key"])
-news_service = NewsService(config['database']['supabase']['url'], config['database']['supabase']['key'])
-
-# Get the configuration for the WhatsApp API service
 whatsapp_api_config = config["whatsapp"]["api_service"]
-
-# Get the service class name and remove it from the config
-service_class_name = whatsapp_api_config.pop("service_class_name")
-
-# Remove the instance_name from the config
-instance_name = whatsapp_api_config.pop("instance_name", None)
-
-# Add the delay parameters to the config
-#whatsapp_api_config["delay_enabled"] = config["whatsapp"]["delay_enabled"]
-#whatsapp_api_config["average_char_min"] = config["whatsapp"]["average_char_min"]
-
-# Get a reference to the service class by name
+service_class_name = whatsapp_api_config.pop("service_class_name", None)
+# instance_name = whatsapp_api_config.pop("instance_name", None)
 service_class = globals()[service_class_name]
 
-# Now whatsapp_api_config doesn't contain 'service_class_name' and 'instance_name', so it can be passed to the service class constructor
-api_service = service_class(whatsapp_api_config)
+whatsapp_api_service = service_class(whatsapp_api_config)
+#whatsapp_api_service.instance_name = instance_name
 
-# Create the WhatsApp service using the API service
-whatsapp_service = WhatsAppService(api_service=api_service)
+# Create the service instances
+ai_service = GenericAIService()
+supabase_service = SupabaseService(config["database"]["supabase"]["url"], config["database"]["supabase"]["key"])
+whatsapp_service = WhatsAppService(api_service=whatsapp_api_service)
 
-supabase_service.delete_news_by_project(1)
 
-news_sources = supabase_service.get_news_sources(1)
+news_service = NewsService(ai_service=ai_service, supabase_service=supabase_service, whatsapp_service=whatsapp_service)
+
+
+news_service.delete_news_by_project(PROJECT_ID)
+
+news_sources = news_service.get_news_sources(PROJECT_ID)
 all_news = []
 
 for source in news_sources:
@@ -112,5 +107,9 @@ for news in chosen_news:
 
 # Send newsletter para WhatsApp
 # Send Headline
+subscribers = news_service.get_subscribers(PROJECT_ID)
+
+for subscriber in subscribers:
+    news_service.send_headline_news(subscriber['number'], headline)
 
 
