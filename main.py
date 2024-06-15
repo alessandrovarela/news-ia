@@ -16,11 +16,8 @@ with open("config.json") as config_file:
 
 whatsapp_api_config = config["whatsapp"]["api_service"]
 service_class_name = whatsapp_api_config.pop("service_class_name", None)
-# instance_name = whatsapp_api_config.pop("instance_name", None)
 service_class = globals()[service_class_name]
-
 whatsapp_api_service = service_class(whatsapp_api_config)
-#whatsapp_api_service.instance_name = instance_name
 
 # Create the service instances
 ai_service = GenericAIService()
@@ -36,12 +33,21 @@ news_service.delete_news_by_project(PROJECT_ID)
 news_sources = news_service.get_news_sources(PROJECT_ID)
 all_news = []
 
+excluded_domains = news_service.load_excluded_domains(PROJECT_ID)
+
 for source in news_sources:
     # Fetch the news thumbnails
     news = fetch_news_thumbnails(source['source'], source.get('limit'))
 
+    # Filtra as notícias com base nos domínios excluídos
+    # Filtra as notícias com base nos domínios excluídos
+    filtered_news = [
+        item for item in news
+        if not any(domain in item['article_url'] for domain in excluded_domains)
+    ]
+
     # Insert each news item into the Supabase
-    for item in news:
+    for item in filtered_news:
         data = {
             'title': item['article_title'],
             'url': item['article_url'],
@@ -58,10 +64,12 @@ for source in news_sources:
 # Get the AI choose news configuration
 ai_choose_news_config = config['app']['ai_choose_news']
 chosen_news = news_service.choose_news(
-    all_news, 
+    all_news,
     ai_choose_news_config['ai'], 
     ai_choose_news_config['model'], 
-    ai_choose_news_config['max_tokens']
+    ai_choose_news_config['max_tokens'],
+    ai_choose_news_config['limit_choose_news'],
+    ai_choose_news_config['limit_last_chosen_news']
 )
 
 print("Chosen news:")
@@ -99,17 +107,24 @@ for news in chosen_news:
     ai_summarize_news_config['ai'], 
     ai_summarize_news_config['model'], 
     ai_summarize_news_config['max_tokens']
-)
-    print("=============================================================")
-    print(f"Summary for {news['title']}: {summary}")
-    # news_service.send_whatsapp_message(news['title'], summary)
+    )
+    news['summary'] = summary
 
 
 # Send newsletter para WhatsApp
 # Send Headline
 subscribers = news_service.get_subscribers(PROJECT_ID)
 
+
+print("-------------> Sending news to subscribers: <-----------------")
 for subscriber in subscribers:
+    print('---------------------------------------------------------')
+    print(f"Headline: {headline}")
     news_service.send_headline_news(subscriber['number'], headline)
 
+    for news in chosen_news:
+        print(f"Sending news: number:{subscriber['number']}, image:{news['image']}, summary:{news['summary']}")
+        news_service.send_image_news(subscriber['number'], news['image'], news['summary'])
+
+    print('---------------------------------------------------------')
 

@@ -169,11 +169,19 @@ class NewsService:
         return self.supabase_service.select_data("news_subscribers", query)
 
     def send_headline_news(self, number: str, headline: str):
-        response, status_code = self.whatsapp_service.send_text_message_whasts_app(number, headline)
+        response, status_code = self.whatsapp_service.send_text_message_whatsapp(number, headline)
         if status_code == 201:
-            # Verifica se há um erro no dicionário de resposta
             if response.get('error'):
-                # Lidar com o erro
+                print("Erro ao enviar a mensagem:", response.get('error'))
+            else:
+                print("Mensagem enviada com sucesso.")
+        else:
+            print(f"Erro na requisição: Código de status {status_code}")
+    
+    def send_image_news(self, number: str, image_url: str, caption: str):
+        response, status_code = self.whatsapp_service.send_media_url_whatsapp(number, image_url, caption)
+        if status_code == 201:
+            if response.get('error'):
                 print("Erro ao enviar a mensagem:", response.get('error'))
             else:
                 print("Mensagem enviada com sucesso.")

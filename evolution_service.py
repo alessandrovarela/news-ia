@@ -7,7 +7,7 @@ class EvolutionApiService:
         print('----------------- CONFIG --------------')
         print(config)        
 
-    def send_text_message(self, instance, number, text, options=None):
+    def send_text_message(self, number, text, options=None):
         url = f"{self._config.get('server_url')}/message/sendText/{self._config.get('instance_name')}"
         print( '----------------- URL --------------')
         print(url)
@@ -26,6 +26,34 @@ class EvolutionApiService:
         }
 
         print( '----------------- PAYLOAD ------------')
+        print(payload)
+        response = requests.post(url, json=payload, headers=headers)
+        return (response.json(), response.status_code)
+
+    def send_media_url_message(self, number, media_url, caption, options=None):
+        url = f"{self._config.get('server_url')}/message/sendMedia/{self._config.get('instance_name')}"
+        print('----------------- URL --------------')
+        print(url)
+
+        # Use o delay padrão de 1200ms se não for especificado em options
+        if options is None:
+            options = {"delay": 1200, "presence": "composing"}
+
+        headers = {
+            "apikey": self._config['api_key'],
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "number": number,
+            "options": options,
+            "mediaMessage": {
+                "mediatype": "image",
+                "caption": caption,
+                "media": media_url
+            }
+        }
+
+        print('----------------- PAYLOAD ------------')
         print(payload)
         response = requests.post(url, json=payload, headers=headers)
         return (response.json(), response.status_code)

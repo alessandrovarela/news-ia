@@ -24,7 +24,7 @@ class TestWhatsAppService(unittest.TestCase):
         number = '15142612760'
         text = 'Hello, world!'
         options = None
-        response_body, status_code = self.whatsapp_service.send_text_message_whasts_app(number, text, options)
+        response_body, status_code = self.whatsapp_service.send_text_message_whatsapp(number, text, options)
         if status_code != 201:
             print('----------------- RESPOSTA --------------')
             print(response_body)
@@ -32,5 +32,17 @@ class TestWhatsAppService(unittest.TestCase):
         else:
             self.assertEqual(status_code, 201, f"Expected status code 201, got {status_code}")
 
+    def test_send_media_url_message(self):
+        number = '15142612760'
+        media_url = 'https://evolution-api.com/files/evolution-api.jpg'
+        caption = 'This is a test image'
+        options = None
+        response_body, status_code = self.whatsapp_service.send_media_url_whatsapp(number, media_url, caption, options)
+        if status_code != 201:
+            print('----------------- RESPOSTA --------------')
+            print(response_body)
+            self.fail(f"Expected status code 201, got {status_code}")
+        else:
+            self.assertEqual(status_code, 201, f"Expected status code 201, got {status_code}")
 if __name__ == '__main__':
     unittest.main()
