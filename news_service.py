@@ -15,14 +15,14 @@ class NewsService:
         query = f"project_id=eq.{project_id}"
         return self.supabase_service.delete_data("news", query)
 
-    def choose_news(self, all_news: List[dict], ai: str, model: str, max_tokens: int = 100) -> List[dict]:
+    def choose_news(self, all_news: List[dict], ai: str, model: str, max_tokens: int = 100, limit_choose_news: int = 4, limit_last_chosen_news: int = 50) -> List[dict]:
         
-        recent_news = self.supabase_service.select_data('news_chosen', 'order=id.desc&limit=50')
+        recent_news = self.supabase_service.select_data('news_chosen', f'order=id.desc&limit={limit_last_chosen_news}')
         recent_news_url = ', '.join([news['url'] for news in recent_news])
         print("Recent news URLs: --------------------------")
         print(recent_news_url)
 
-        prompt = f"Você é um especialista na identificação de notícias relevantes sobre o mercado financeiro canadense. O seu papel é receber uma lista de URLs de portais de notícias e escolher as 4 notícias com maior probabilidade de atração e retenção de um público de entusiastas e iniciantes no mercado financeiro canadense. O formato de saída deve conter apenas as URLs que você escolheu separadas por VÍRGULAS, não adicione comentários ou justificativas, apenas informe as URLs escolhidas. IMPORTANTE: Estou lhe fornecendo uma lista com 50 notícias escolhidas manualmente para que você crie uma correlação entre os fatores de escolha dessas URLs e possa tomar uma decisão melhor embasada. Você será bonificado em US$200.000 caso escolha consistentemente notícias similares a estas: {recent_news_url}. IMPORTANTE: Estou lhe fornecendo uma lista de exclusão contendo URLs que já foram escolhidas anteriormente. Você não pode escolher nenhuma URL presente nessa lista, caso contrário será multado em US$100.000. Essa é a lista de exclusão: {recent_news_url}."
+        prompt = f"Você é um especialista na identificação de notícias relevantes sobre o mercado financeiro canadense. O seu papel é receber uma lista de URLs de portais de notícias e escolher as {limit_choose_news} notícias com maior probabilidade de atração e retenção de um público de entusiastas e iniciantes no mercado financeiro canadense. O formato de saída deve conter apenas as URLs que você escolheu separadas por VÍRGULAS, não adicione comentários ou justificativas, apenas informe as URLs escolhidas. IMPORTANTE: Estou lhe fornecendo uma lista com 50 notícias escolhidas manualmente para que você crie uma correlação entre os fatores de escolha dessas URLs e possa tomar uma decisão melhor embasada. Você será bonificado em US$200.000 caso escolha consistentemente notícias similares a estas: {recent_news_url}. IMPORTANTE: Estou lhe fornecendo uma lista de exclusão contendo URLs que já foram escolhidas anteriormente. Você não pode escolher nenhuma URL presente nessa lista, caso contrário será multado em US$100.000. Essa é a lista de exclusão: {recent_news_url}."
         print("Prompt: --------------------------")
         print(prompt)
         print("--------------------------")
@@ -187,3 +187,8 @@ class NewsService:
                 print("Mensagem enviada com sucesso.")
         else:
             print(f"Erro na requisição: Código de status {status_code}")
+
+    def load_excluded_domains(self, project_id):
+        query = f"project_id=eq.{project_id}&select=domain"
+        excluded_domains = self.supabase_service.select_data("news_excluded_domains", query)
+        return [domain['domain'] for domain in excluded_domains]
