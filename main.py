@@ -11,8 +11,11 @@ PROJECT_ID = 1
 
 # Load the configuration file
 with open("config.json") as config_file:
-    config = json.load(config_file)
+    config_file = json.load(config_file)
 
+supabase_service = SupabaseService(config_file["database"]["supabase"]["url"], config_file["database"]["supabase"]["key"])
+project_config = supabase_service.load_project_config(PROJECT_ID)
+config = project_config['config_json']
 
 whatsapp_api_config = config["whatsapp"]["api_service"]
 service_class_name = whatsapp_api_config.pop("service_class_name", None)
@@ -20,11 +23,9 @@ service_class = globals()[service_class_name]
 whatsapp_api_service = service_class(whatsapp_api_config)
 
 # Create the service instances
-ai_service = GenericAIService()
-supabase_service = SupabaseService(config["database"]["supabase"]["url"], config["database"]["supabase"]["key"])
+ai_service = GenericAIService(config['ai'])
+
 whatsapp_service = WhatsAppService(api_service=whatsapp_api_service)
-
-
 news_service = NewsService(ai_service=ai_service, supabase_service=supabase_service, whatsapp_service=whatsapp_service)
 
 
@@ -33,13 +34,12 @@ news_sources = news_service.get_news_sources(PROJECT_ID)
 
 all_news = []
 
-project_details = news_service.load_project_details_with_prompts(PROJECT_ID)
 excluded_domains = news_service.load_excluded_domains(PROJECT_ID)
 
-choose_news_prompt_description = project_details['choose_news_prompt']['description']
-create_headline_prompt_description = project_details['create_headline_prompt']['description']
-summarize_news_prompt_description = project_details['summarize_news_prompt']['description']
-introduction_prompt = project_details['introduction_prompt']['description']
+choose_news_prompt_description = project_config['choose_news_prompt']['description']
+create_headline_prompt_description = project_config['create_headline_prompt']['description']
+summarize_news_prompt_description = project_config['summarize_news_prompt']['description']
+introduction_prompt = project_config['introduction_prompt']['description']
 
 for source in news_sources:
     news = fetch_news_thumbnails(source['source'], source.get('limit'))

@@ -128,6 +128,7 @@ class NewsService:
             f"id=eq.{project_id}&"
             "select=id,"
             "name,"
+            "config_json,"
             "choose_news_prompt:choose_news_prompt_id!inner(id,description),"
             "create_headline_prompt:create_headline_prompt_id!inner(id,description),"
             "summarize_news_prompt:summarize_news_prompt_id!inner(id,description),"
