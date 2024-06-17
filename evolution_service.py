@@ -4,16 +4,14 @@ import random
 class EvolutionApiService:
     def __init__(self, config):
         self._config = config
-        print('----------------- CONFIG --------------')
-        print(config)        
+
+    def get_config(self):
+        return self._config        
 
     def send_text_message(self, number, text, options=None):
         url = f"{self._config.get('server_url')}/message/sendText/{self._config.get('instance_name')}"
-        print( '----------------- URL --------------')
-        print(url)
 
-        # Calculate the delay if delay_enabled is True
-        delay = self.calculate_delay(text, self._config['average_char_min']) if self._config.get('delay_enabled', False) else 0
+        delay = self.calculate_delay(text)
 
         headers = {
             "apikey": self._config['api_key'],
@@ -32,12 +30,10 @@ class EvolutionApiService:
 
     def send_media_url_message(self, number, media_url, caption, options=None):
         url = f"{self._config.get('server_url')}/message/sendMedia/{self._config.get('instance_name')}"
-        print('----------------- URL --------------')
-        print(url)
 
-        # Use o delay padrão de 1200ms se não for especificado em options
+        delay = self.calculate_delay(caption)
         if options is None:
-            options = {"delay": 1200, "presence": "composing"}
+            options = {"delay": delay, "presence": "composing"}
 
         headers = {
             "apikey": self._config['api_key'],
@@ -58,21 +54,18 @@ class EvolutionApiService:
         response = requests.post(url, json=payload, headers=headers)
         return (response.json(), response.status_code)
 
-    def calculate_delay(self, message, average_char_min):
-        # Calculate the number of characters per second
-        chars_per_second = average_char_min / 60
+    def calculate_delay(self, message):
 
-        # Calculate the delay in seconds
-        delay_seconds = len(message) / chars_per_second
-
+        if self._config.get('delay_by_size_message', False):
+            seconds_per_char =  60 / self._config.get['average_char_min']
+            delay_seconds = len(message) / seconds_per_char            
+            delay_milliseconds = delay_seconds * 1000
+        else:
+            delay_milliseconds = self._config.get('delay_default_ms', 1200)
+        
         # Randomize the delay by up to 30%
         random_factor = random.uniform(0.7, 1.3)
-        delay_seconds *= random_factor
+        delay_milliseconds *= random_factor
 
-        # Convert the delay to milliseconds
-        delay_milliseconds = int(delay_seconds * 1000)
-
-        return delay_milliseconds
+        return int(delay_milliseconds)
     
-    def get_config(self):
-        return self._config

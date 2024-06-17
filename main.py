@@ -1,4 +1,4 @@
-from hmac import new
+
 from read_rss import fetch_news_thumbnails
 from supabase_service import SupabaseService
 from news_service import NewsService
@@ -29,24 +29,26 @@ news_service = NewsService(ai_service=ai_service, supabase_service=supabase_serv
 
 
 news_service.delete_news_by_project(PROJECT_ID)
-
 news_sources = news_service.get_news_sources(PROJECT_ID)
+
 all_news = []
 
+project_details = news_service.load_project_details_with_prompts(PROJECT_ID)
 excluded_domains = news_service.load_excluded_domains(PROJECT_ID)
 
+choose_news_prompt_description = project_details['choose_news_prompt']['description']
+create_headline_prompt_description = project_details['create_headline_prompt']['description']
+summarize_news_prompt_description = project_details['summarize_news_prompt']['description']
+introduction_prompt = project_details['introduction_prompt']['description']
+
 for source in news_sources:
-    # Fetch the news thumbnails
     news = fetch_news_thumbnails(source['source'], source.get('limit'))
 
-    # Filtra as notícias com base nos domínios excluídos
-    # Filtra as notícias com base nos domínios excluídos
     filtered_news = [
         item for item in news
         if not any(domain in item['article_url'] for domain in excluded_domains)
     ]
 
-    # Insert each news item into the Supabase
     for item in filtered_news:
         data = {
             'title': item['article_title'],
@@ -61,15 +63,23 @@ for source in news_sources:
         print(f"Inserted news item: {item['article_title']}")
 
 
-# Get the AI choose news configuration
 ai_choose_news_config = config['app']['ai_choose_news']
+recent_news = news_service.get_recent_news(PROJECT_ID, ai_choose_news_config['limit_last_chosen_news'])
+
+if not recent_news:
+    send_introduction = True
+else:
+    send_introduction = False
+
+# Get the AI choose news configuration
 chosen_news = news_service.choose_news(
     all_news,
+    recent_news,
+    choose_news_prompt_description,
     ai_choose_news_config['ai'], 
     ai_choose_news_config['model'], 
     ai_choose_news_config['max_tokens'],
-    ai_choose_news_config['limit_choose_news'],
-    ai_choose_news_config['limit_last_chosen_news']
+    ai_choose_news_config['limit_choose_news']
 )
 
 print("Chosen news:")
@@ -82,11 +92,10 @@ for news in chosen_news:
     print('---')
 
 # Cria Headline
-# Get the AI create headline configuration
 ai_create_headline_config = config['app']['ai_create_headline']
-# Use the configuration to create a headline
 headline = news_service.create_headline(
-    chosen_news, 
+    chosen_news,
+    create_headline_prompt_description, 
     ai_create_headline_config['ai'], 
     ai_create_headline_config['model'], 
     ai_create_headline_config['max_tokens']
@@ -103,7 +112,8 @@ ai_summarize_news_config = config['app']['ai_summarize_news']
 
 for news in chosen_news:
     summary = news_service.summarize_news(
-    news['url'], 
+    news['url'],
+    summarize_news_prompt_description, 
     ai_summarize_news_config['ai'], 
     ai_summarize_news_config['model'], 
     ai_summarize_news_config['max_tokens']
@@ -115,9 +125,17 @@ for news in chosen_news:
 # Send Headline
 subscribers = news_service.get_subscribers(PROJECT_ID)
 
-
 print("-------------> Sending news to subscribers: <-----------------")
 for subscriber in subscribers:
+    introduction = None
+    if send_introduction:
+        if not introduction:
+            ai_inital_introduction_config = config['app']['ai_inital_introduction']
+            introduction = news_service.inital_introduction(introduction_prompt, ai_inital_introduction_config['ai'], ai_inital_introduction_config['model'], ai_inital_introduction_config['max_tokens'])
+
+        print(f"Sending introduction: number:{subscriber['number']}, introduction:{introduction}")
+        news_service.send_introduction(subscriber['number'], introduction)
+
     print('---------------------------------------------------------')
     print(f"Headline: {headline}")
     news_service.send_headline_news(subscriber['number'], headline)
