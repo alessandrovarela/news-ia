@@ -1,0 +1,8 @@
+﻿"table_name","?column?"
+"news","CREATE TABLE news (published text, url text, id bigint, created_at timestamp with time zone, source_name text, image text, project_id bigint, title text);"
+"news_chosen","CREATE TABLE news_chosen (image text, title text, created_at timestamp with time zone, project_id bigint, source_name text, id bigint, published character varying, url text);"
+"news_excluded_domains","CREATE TABLE news_excluded_domains (project_id bigint, created_at timestamp with time zone, domain text, id bigint);"
+"news_projects","CREATE TABLE news_projects (name text, choose_news_prompt_id bigint, create_headline_prompt_id bigint, summarize_news_prompt_id bigint, introduction_prompt_id bigint, id bigint, created_at timestamp with time zone);"
+"news_source","CREATE TABLE news_source (active boolean, limit smallint, created_at timestamp with time zone, id bigint, project_id bigint, source text, source_name text);"
+"news_subscribers","CREATE TABLE news_subscribers (created_at timestamp with time zone, project_id bigint, number text, description text, active boolean, id bigint);"
+"prompts","CREATE TABLE prompts (created_at timestamp with time zone, title text, description text, id bigint);"
