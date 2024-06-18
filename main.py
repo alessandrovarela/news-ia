@@ -1,4 +1,5 @@
 
+import argparse
 from read_rss import fetch_news_thumbnails
 from supabase_service import SupabaseService
 from news_service import NewsService
@@ -7,7 +8,16 @@ from evolution_service import EvolutionApiService # noqa: F401
 from generic_ai_service import GenericAIService
 import json
 
-PROJECT_ID = 1
+parser = argparse.ArgumentParser(description='Process some integers.')
+
+# Adiciona o argumento --project_id ao analisador
+parser.add_argument('--project_id', type=int, help='An integer for the project ID')
+
+# Analisa os argumentos de linha de comando
+args = parser.parse_args()
+
+# Usa o PROJECT_ID fornecido nos argumentos, ou um valor padrão se não for fornecido
+PROJECT_ID = args.project_id if args.project_id is not None else 1
 
 # Load the configuration file
 with open("config.json") as config_file:
@@ -103,8 +113,6 @@ headline = news_service.create_headline(
 
 print("Headline:")
 print(headline)
-
-
 
 # Faz resumo de notícias e envia para WhastApp
 # Get the AI summarize news configuration
