@@ -53,11 +53,13 @@ introduction_prompt = project_config['introduction_prompt']['description']
 
 for source in news_sources:
     news = fetch_news_thumbnails(source['source'], source.get('limit'))
+    print(f"News Count: {len(news)}")
 
     filtered_news = [
         item for item in news
-        if not any(domain in item['article_url'] for domain in excluded_domains)
+            if not any(domain in item['article_url'] for domain in excluded_domains)
     ]
+    print(f"Filtered News Count: {len(filtered_news)}")
 
     for item in filtered_news:
         data = {
@@ -117,6 +119,10 @@ print(headline)
 # Faz resumo de notícias e envia para WhastApp
 # Get the AI summarize news configuration
 ai_summarize_news_config = config['app']['ai_summarize_news']
+
+print("-----------------------------------------------------------------")
+print("Prompt Summarize News:", summarize_news_prompt_description)
+print("-----------------------------------------------------------------")
 
 for news in chosen_news:
     summary = news_service.summarize_news(

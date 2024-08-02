@@ -19,8 +19,9 @@ class NewsService:
 
     def choose_news(self, all_news: List[dict], recent_news, prompt: str, ai: str, model: str, max_tokens: int = 100, limit_choose_news: int = 4, limit_last_chosen_news: int = 50) -> List[dict]:        
         recent_news_url = ', '.join([news['url'] for news in recent_news])
+        filtered_news = [news for news in all_news if news['url'] not in recent_news_url]
 
-        prompt = prompt.format(limit_choose_news=limit_choose_news, recent_news_url=recent_news_url)
+        prompt = prompt.format(limit_choose_news=limit_choose_news)
 
         messages = [
             {
@@ -29,12 +30,18 @@ class NewsService:
             },
             {
                 "role": "user",
-                "content": ", ".join([news['url'] for news in all_news])
+                "content": ", ".join([news['url'] for news in filtered_news])
             }
         ]
  
 
         chosen_urls = self.ai_service.generate_text(messages, ai, model, max_tokens)
+
+        #print("-----------------------------------------------------------------")
+        #print("Prompt Choose News:", prompt)
+        #print("-----------------------------------------------------------------")
+
+        #print("Chosen URLs:", chosen_urls)
 
         news_chosen = [news for news in all_news if news['url'] in chosen_urls]
         self.supabase_service.insert_data('news_chosen', news_chosen)
@@ -71,6 +78,7 @@ class NewsService:
         return headline
 
     def summarize_news(self, news_url, prompt, ai, model, max_tokens=100):
+
         messages = [
             {
                 "role": "system",
@@ -82,6 +90,12 @@ class NewsService:
             }
         ]
         summary = self.ai_service.generate_text(messages, ai, model, max_tokens)
+
+        #print("-----------------------------------------------------------------")
+        #print(f"News URL (ai:{ai}, model:{model}): {news_url}")
+        #print("Summary:", summary)
+        #print("-----------------------------------------------------------------")
+        #print("")
         return summary
 
     def get_subscribers(self, project_id: str):
