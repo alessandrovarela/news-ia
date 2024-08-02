@@ -120,9 +120,9 @@ print(headline)
 # Get the AI summarize news configuration
 ai_summarize_news_config = config['app']['ai_summarize_news']
 
-print("-----------------------------------------------------------------")
-print("Prompt Summarize News:", summarize_news_prompt_description)
-print("-----------------------------------------------------------------")
+#print("-----------------------------------------------------------------")
+#print("Prompt Summarize News:", summarize_news_prompt_description)
+#print("-----------------------------------------------------------------")
 
 for news in chosen_news:
     summary = news_service.summarize_news(
