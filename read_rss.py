@@ -1,6 +1,6 @@
 import feedparser
 import requests
-from requests.exceptions import SSLError, RequestException
+from requests.exceptions import Timeout, SSLError, RequestException
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -98,7 +98,16 @@ def get_thumbnail_url(final_url):
     return None
 
 def fetch_news_thumbnails(rss_url, limit=None):
-    feed = feedparser.parse(rss_url)
+    try:
+        response = requests.get(rss_url, timeout=10)
+        response.raise_for_status()
+        feed_content = response.content
+    except (Timeout, RequestException) as e:
+        print(f"Error fetching RSS feed: {e}")
+        return []
+
+    feed = feedparser.parse(feed_content)
+
     news = []
     redirect_domains = ['news.google.com']
 
