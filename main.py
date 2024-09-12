@@ -52,6 +52,9 @@ summarize_news_prompt_description = project_config['summarize_news_prompt']['des
 introduction_prompt = project_config['introduction_prompt']['description']
 
 for source in news_sources:
+
+    print(f"Fetching news for source: >>>> {source['source_name'] } <<<<")
+
     news = fetch_news_thumbnails(source['source'], source.get('limit'))
     print(f"News Count: {len(news)}")
 
