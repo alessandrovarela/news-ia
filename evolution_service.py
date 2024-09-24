@@ -8,7 +8,7 @@ class EvolutionApiService:
     def get_config(self):
         return self._config        
 
-    def send_text_message(self, number, text, options=None):
+    def send_text_message(self, number, text):
         url = f"{self._config.get('server_url')}/message/sendText/{self._config.get('instance_name')}"
 
         delay = self.calculate_delay(text)
@@ -19,8 +19,8 @@ class EvolutionApiService:
         }
         payload = {
             "number": number,
-            "options": {"delay": delay} if options is None else options,
-            "textMessage": {"text": text}
+            "text": text,
+            "delay": delay
         }
 
         print( '----------------- PAYLOAD ------------')
@@ -28,12 +28,10 @@ class EvolutionApiService:
         response = requests.post(url, json=payload, headers=headers)
         return (response.json(), response.status_code)
 
-    def send_media_url_message(self, number, media_url, caption, options=None):
+    def send_media_url_message(self, number, media_url, caption):
         url = f"{self._config.get('server_url')}/message/sendMedia/{self._config.get('instance_name')}"
 
         delay = self.calculate_delay(caption)
-        if options is None:
-            options = {"delay": delay, "presence": "composing"}
 
         headers = {
             "apikey": self._config['api_key'],
@@ -41,12 +39,11 @@ class EvolutionApiService:
         }
         payload = {
             "number": number,
-            "options": options,
-            "mediaMessage": {
-                "mediatype": "image",
-                "caption": caption,
-                "media": media_url
-            }
+            "mediatype": "image",
+            "mimetype": "image/png",
+            "caption": caption,
+            "media": media_url,
+            "delay": delay,
         }
 
         print('----------------- PAYLOAD ------------')

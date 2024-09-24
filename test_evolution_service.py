@@ -39,15 +39,12 @@ class TestEvolutionApiService(unittest.TestCase):
         }
         data = {
             "number": "15142612760",
-            "options": {
-                "delay": 1200,
-                "presence": "composing"
-            },
-            "mediaMessage": {
-                "mediatype": "image",
-                "caption": "This is an example JPG image file sent by Evolution-API via URL.",
-                "media": "https://evolution-api.com/files/evolution-api.jpg"
-            }
+            "mediatype": "image",
+            "mimetype": "image/png",
+            "caption": "This is an example JPG image file sent by Evolution-API via URL.",
+            "media": "https://evolution-api.com/files/evolution-api.jpg",
+            "fileName": "evolution-api-test-name.jpg",
+            "delay": 1200
         }
         response = requests.post(url, headers=headers, data=json.dumps(data))
         self.assertEqual(response.status_code, 201)
